@@ -23,7 +23,11 @@
       "Bash(pkill -f vite)",
       "Bash(npx vercel *)",
       "Read(//tmp/**)",
-      "Bash(pkill -f \"vercel dev\")"
+      "Bash(pkill -f \"vercel dev\")",
+      "Bash(gh auth *)",
+      "Bash(ssh -T git@github.com)",
+      "Bash(git config *)",
+      "Bash(security find-internet-password *)"
     ]
   }
 }

@@ -17,6 +17,13 @@ export async function init() {
   if (initPromise) return initPromise;
   initPromise = (async () => {
     const db = getDb();
+    // Fast path: tables already exist — skip schema work entirely
+    try {
+      await db.execute('SELECT 1 FROM habits LIMIT 1');
+      return;
+    } catch {
+      // Table doesn't exist; fall through to full schema setup
+    }
     const schema = [
       `CREATE TABLE IF NOT EXISTS habits (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

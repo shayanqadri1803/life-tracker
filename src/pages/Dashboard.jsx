@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
-import { getToday, getSummary, toggleHabit, logGoal } from '../api';
+import { getToday, toggleHabit, logGoal } from '../api';
 import HabitCard from '../components/HabitCard';
 import GoalCard from '../components/GoalCard';
 import DaySummary from '../components/DaySummary';
@@ -14,22 +14,34 @@ export default function Dashboard() {
   const today = new Date().toISOString().split('T')[0];
 
   const load = useCallback(async () => {
-    const [d, s] = await Promise.all([getToday(), getSummary(today)]);
-    setData(d);
-    setSummary(s);
+    const d = await getToday();
+    setData({ date: d.date, habits: d.habits, goals: d.goals });
+    setSummary(d.summary);
     setLoading(false);
-  }, [today]);
+  }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const handleToggle = async (habit_id, completed) => {
-    await toggleHabit(habit_id, today, completed);
-    load();
+  // Optimistic toggle: update UI immediately, sync to server in background
+  const handleToggle = (habit_id, completed) => {
+    setData(prev => ({
+      ...prev,
+      habits: prev.habits.map(h => h.id === habit_id ? { ...h, completed } : h),
+    }));
+    toggleHabit(habit_id, today, completed)
+      .then(() => load())     // re-sync summary (streak, needs_work, %)
+      .catch(() => load());   // on error, refetch authoritative state
   };
 
-  const handleLog = async (goal_id, value, note) => {
-    await logGoal(goal_id, today, value, note);
-    load();
+  // Optimistic goal log: bump logged_value immediately
+  const handleLog = (goal_id, value, note) => {
+    setData(prev => ({
+      ...prev,
+      goals: prev.goals.map(g => g.id === goal_id ? { ...g, logged_value: g.logged_value + value } : g),
+    }));
+    logGoal(goal_id, today, value, note)
+      .then(() => load())
+      .catch(() => load());
   };
 
   if (loading) return <div className="loading">Loading...</div>;
