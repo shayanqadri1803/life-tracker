@@ -1,100 +1,142 @@
 import { useState, useEffect } from 'react';
-import { format, parseISO } from 'date-fns';
-import { getHistory } from '../api';
+import { getHistory, getStats } from '../api';
+import WeekChart from '../components/WeekChart';
 
-function DotRow({ habit, dates }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 8 }}>
-      <div style={{ width: 130, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontSize: 14 }}>{habit.emoji}</span>
-        <span style={{ fontSize: 12, color: '#d1d5db', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{habit.name}</span>
-      </div>
-      <div style={{ display: 'flex', gap: 3, flex: 1, overflowX: 'auto' }}>
-        {habit.history.map(entry => (
-          <div
-            key={entry.date}
-            title={format(parseISO(entry.date), 'MMM d')}
-            style={{
-              width: 14, height: 14, borderRadius: 3, flexShrink: 0,
-              background: entry.completed ? habit.color : '#2a2a2a',
-              transition: 'background 0.2s',
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export default function History() {
-  const [data, setData] = useState(null);
+export default function Stats() {
+  const [history, setHistory] = useState(null);
+  const [stats, setStats] = useState(null);
   const [days, setDays] = useState(30);
 
   useEffect(() => {
-    getHistory(days).then(setData);
+    Promise.all([getHistory(days), getStats()]).then(([h, s]) => {
+      setHistory(h);
+      setStats(s);
+    });
   }, [days]);
 
-  if (!data) return <div className="loading">Loading...</div>;
+  if (!history || !stats) return <div className="loading">Loading stats…</div>;
 
-  const lastDates = data.dates.slice(-7);
+  const weeklyData = history.dates.slice(-7).map((date, i) => {
+    const done = history.habits.filter(h => h.history.find(e => e.date === date && e.completed)).length;
+    const pct = history.habits.length > 0 ? Math.round((done / history.habits.length) * 100) : 0;
+    const d = new Date(date);
+    const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    return { date, label: DAYS[d.getDay()], pct, isToday: i === 6 };
+  });
 
   return (
     <div className="page">
-      <div className="page-header">
-        <div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#f9fafb' }}>History</div>
-          <div style={{ fontSize: 13, color: '#6b7280' }}>Track your consistency over time</div>
+      <div className="page-header-block">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <div className="page-header-title">Stats</div>
+            <div className="page-header-sub">Your consistency over time</div>
+          </div>
+          <select
+            value={days}
+            onChange={e => setDays(Number(e.target.value))}
+            style={{
+              background: 'var(--surface2)', border: '1px solid var(--border2)',
+              borderRadius: 'var(--radius-sm)', color: 'var(--text)', padding: '7px 10px',
+              fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+            }}
+          >
+            <option value={7}>7 days</option>
+            <option value={14}>14 days</option>
+            <option value={30}>30 days</option>
+          </select>
         </div>
-        <select
-          value={days}
-          onChange={e => setDays(Number(e.target.value))}
-          style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 8, color: '#f9fafb', padding: '6px 10px', fontSize: 13 }}
-        >
-          <option value={7}>7 days</option>
-          <option value={14}>14 days</option>
-          <option value={30}>30 days</option>
-        </select>
       </div>
 
-      {data.habits.length === 0 ? (
-        <div className="empty-state">No habits tracked yet.</div>
-      ) : (
-        <>
-          <div className="card">
-            <div className="section-title" style={{ marginBottom: 12 }}>Habit Heatmap</div>
-            <div style={{ display: 'flex', marginBottom: 8, paddingLeft: 130 }}>
-              {data.dates.slice(-Math.min(days, 14)).map((d, i) => (
-                <div key={i} style={{ width: 14, flexShrink: 0, marginRight: 3, fontSize: 9, color: '#6b7280', textAlign: 'center', transform: 'rotate(-45deg)', transformOrigin: 'bottom' }}>
-                  {format(parseISO(d), 'd')}
-                </div>
-              ))}
-            </div>
-            {data.habits.map(h => {
-              const sliced = { ...h, history: h.history.slice(-Math.min(days, 30)) };
-              return <DotRow key={h.id} habit={sliced} dates={data.dates} />;
-            })}
+      <div style={{ padding: '0 16px' }}>
+        {/* Stat tiles */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}
+             className="stat-tiles-grid">
+          <div className="stat-tile accent">
+            <div className="stat-tile-icon">🔥</div>
+            <div className="stat-tile-val">{stats.best_streak}<small>d</small></div>
+            <div className="stat-tile-lbl">Best Streak</div>
           </div>
+          <div className="stat-tile">
+            <div className="stat-tile-icon">✅</div>
+            <div className="stat-tile-val">{stats.avg_30day_pct}<small>%</small></div>
+            <div className="stat-tile-lbl">Avg (30 days)</div>
+          </div>
+          <div className="stat-tile">
+            <div className="stat-tile-icon">⚡</div>
+            <div className="stat-tile-val">{stats.total_checkins}</div>
+            <div className="stat-tile-lbl">Total Check-ins</div>
+          </div>
+          <div className="stat-tile">
+            <div className="stat-tile-icon">🎯</div>
+            <div className="stat-tile-val">{history.habits.length}</div>
+            <div className="stat-tile-lbl">Active Habits</div>
+          </div>
+        </div>
 
-          <div className="card" style={{ marginTop: 16 }}>
-            <div className="section-title" style={{ marginBottom: 12 }}>Last 7 Days Detail</div>
-            {lastDates.map(date => {
-              const done = data.habits.filter(h => h.history.find(e => e.date === date && e.completed)).length;
-              const pct = data.habits.length > 0 ? Math.round((done / data.habits.length) * 100) : 0;
-              return (
-                <div key={date} style={{ marginBottom: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#9ca3af', marginBottom: 4 }}>
-                    <span>{format(parseISO(date), 'EEE, MMM d')}</span>
-                    <span style={{ color: pct === 100 ? '#10b981' : pct > 50 ? '#f97316' : '#f87171' }}>{done}/{data.habits.length} · {pct}%</span>
+        {/* Weekly bar chart */}
+        <div className="section-title">This Week</div>
+        <div className="card" style={{ marginBottom: 16 }}>
+          <WeekChart weekly={weeklyData} />
+        </div>
+
+        {/* Heatmap */}
+        {history.habits.length > 0 && (
+          <>
+            <div className="section-title">Habit Heatmap</div>
+            <div className="card" style={{ marginBottom: 16 }}>
+              {history.habits.map(h => {
+                const slice = h.history.slice(-days);
+                return (
+                  <div key={h.id} className="heatmap-row">
+                    <span className="heatmap-label">{h.emoji}</span>
+                    <div className="heatmap-dots">
+                      {slice.map(entry => (
+                        <div
+                          key={entry.date}
+                          className={`heatmap-dot${entry.completed ? ' done' : ''}`}
+                          title={entry.date}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div style={{ background: '#2a2a2a', borderRadius: 4, height: 6, overflow: 'hidden' }}>
-                    <div style={{ width: `${pct}%`, height: '100%', background: pct === 100 ? '#10b981' : '#f97316', borderRadius: 4, transition: 'width 0.4s' }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
+                );
+              })}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+                <span style={{ fontSize: 11, color: 'var(--text3)' }}>Less</span>
+                {['var(--border2)', 'rgba(249,115,22,0.25)', 'rgba(249,115,22,0.6)', 'var(--orange)'].map((c, i) => (
+                  <div key={i} style={{ width: 12, height: 12, borderRadius: 3, background: c }} />
+                ))}
+                <span style={{ fontSize: 11, color: 'var(--text3)' }}>More</span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Last 7 days breakdown */}
+        <div className="section-title">Last 7 Days</div>
+        <div className="card">
+          {weeklyData.map(d => (
+            <div key={d.date} style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 5 }}>
+                <span style={{ color: d.isToday ? 'var(--orange)' : 'var(--text2)', fontWeight: d.isToday ? 700 : 500 }}>
+                  {d.isToday ? 'Today' : d.date}
+                </span>
+                <span style={{ color: d.pct === 100 ? 'var(--green)' : d.pct >= 50 ? 'var(--orange)' : 'var(--red)', fontWeight: 700 }}>
+                  {d.pct}%
+                </span>
+              </div>
+              <div style={{ background: 'var(--border2)', borderRadius: 4, height: 5, overflow: 'hidden' }}>
+                <div style={{
+                  width: `${d.pct}%`, height: '100%', borderRadius: 4,
+                  background: d.pct === 100 ? 'var(--green)' : 'var(--orange)',
+                  transition: 'width 0.4s ease',
+                }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,42 +1,26 @@
-import ProgressBar from './ProgressBar';
-
 export default function HabitCard({ habit, onToggle }) {
-  const { id, name, emoji, color, completed } = habit;
+  const { id, name, emoji, completed, week_pct = 0, habit_streak = 0 } = habit;
 
   return (
     <div
-      className="card"
-      style={{ borderLeft: `3px solid ${color}`, cursor: 'pointer' }}
+      className={`habit-card${completed ? ' done' : ''}`}
       onClick={() => onToggle(id, !completed)}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div
-          style={{
-            width: 28, height: 28, borderRadius: 8,
-            border: `2px solid ${completed ? color : '#444'}`,
-            background: completed ? color : 'transparent',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, transition: 'all 0.2s ease',
-          }}
-        >
-          {completed && <span style={{ fontSize: 14, color: '#fff' }}>✓</span>}
+      <div className={`habit-check${completed ? ' checked' : ''}`}>
+        {completed && '✓'}
+      </div>
+      <span className="habit-emoji">{emoji}</span>
+      <div className="habit-info">
+        <div className={`habit-name${completed ? ' done' : ''}`}>{name}</div>
+        <div className="habit-meta">
+          {habit_streak > 0 ? `🔥 ${habit_streak} day streak` : 'No streak yet'}
         </div>
-        <span style={{ fontSize: 18 }}>{emoji}</span>
-        <div style={{ flex: 1 }}>
-          <div style={{
-            fontWeight: 600, fontSize: 15,
-            color: completed ? '#6b7280' : '#f9fafb',
-            textDecoration: completed ? 'line-through' : 'none',
-            transition: 'all 0.2s'
-          }}>
-            {name}
-          </div>
+      </div>
+      <div className="habit-right">
+        <div className={`habit-week-pct${week_pct >= 70 ? ' high' : ''}`}>{week_pct}%</div>
+        <div className="habit-week-bar">
+          <div className="habit-week-bar-fill" style={{ width: `${week_pct}%` }} />
         </div>
-        {completed && (
-          <span style={{ fontSize: 11, color: color, fontWeight: 600, background: `${color}22`, padding: '2px 8px', borderRadius: 12 }}>
-            Done
-          </span>
-        )}
       </div>
     </div>
   );

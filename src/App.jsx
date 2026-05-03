@@ -7,7 +7,7 @@ import './index.css';
 function Nav() {
   const links = [
     { to: '/', label: 'Today', icon: '☀️' },
-    { to: '/history', label: 'History', icon: '📅' },
+    { to: '/history', label: 'Stats', icon: '📊' },
     { to: '/setup', label: 'Setup', icon: '⚙️' },
   ];
 
@@ -15,20 +15,26 @@ function Nav() {
     <>
       <nav className="sidebar">
         <div className="sidebar-logo">
-          <span style={{ fontSize: 22 }}>🌱</span>
-          <span style={{ fontWeight: 800, fontSize: 16, color: '#f9fafb' }}>LifeTracker</span>
+          <div className="sidebar-logo-icon">🌱</div>
+          <span style={{ fontWeight: 800, fontSize: 15, color: 'var(--text)', letterSpacing: '-0.3px' }}>LifeTracker</span>
         </div>
-        {links.map(l => (
-          <NavLink
-            key={l.to}
-            to={l.to}
-            end={l.to === '/'}
-            className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-          >
-            <span style={{ fontSize: 18 }}>{l.icon}</span>
-            <span>{l.label}</span>
-          </NavLink>
-        ))}
+        <div style={{ flex: 1 }}>
+          {links.map(l => (
+            <NavLink
+              key={l.to}
+              to={l.to}
+              end={l.to === '/'}
+              className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+            >
+              <span style={{ fontSize: 17 }}>{l.icon}</span>
+              <span>{l.label}</span>
+            </NavLink>
+          ))}
+        </div>
+        <div className="sidebar-footer">
+          <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4 }}>Keep it up</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--orange)' }}>🔥 Stay consistent</div>
+        </div>
       </nav>
 
       <nav className="bottom-nav">

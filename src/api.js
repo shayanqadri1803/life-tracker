@@ -3,6 +3,7 @@ const BASE = '/api';
 export const getToday = () => fetch(`${BASE}/entries/today`).then(r => r.json());
 export const getSummary = (date) => fetch(`${BASE}/entries/summary/${date}`).then(r => r.json());
 export const getHistory = (days = 30) => fetch(`${BASE}/entries/history?days=${days}`).then(r => r.json());
+export const getStats = () => fetch(`${BASE}/entries/stats`).then(r => r.json());
 
 export const toggleHabit = (habit_id, date, completed) =>
   fetch(`${BASE}/entries/habit`, {
