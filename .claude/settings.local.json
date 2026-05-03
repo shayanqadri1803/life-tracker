@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(node server.js)",
+      "Bash(curl -s http://localhost:3001/api/habits)",
+      "Bash(curl -s \"http://localhost:3001/api/entries/today\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s \"http://localhost:3001/api/entries/summary/2026-05-03\")",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(pkill -f \"node server.js\")",
+      "Bash(pkill -f \"vite\")",
+      "Bash(mv frontend/src ./src)",
+      "Bash(mv frontend/public ./public)",
+      "Bash(mv frontend/index.html ./index.html)",
+      "Bash(mv frontend/vite.config.js ./vite.config.js)",
+      "Bash(mv frontend/eslint.config.js ./eslint.config.js)",
+      "Bash(npx vite *)"
+    ]
+  }
+}
