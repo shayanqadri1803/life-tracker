@@ -17,7 +17,7 @@ export async function init() {
   if (initPromise) return initPromise;
   initPromise = (async () => {
     const db = getDb();
-    await db.batch([
+    const schema = [
       `CREATE TABLE IF NOT EXISTS habits (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -53,18 +53,20 @@ export async function init() {
         value REAL NOT NULL,
         note TEXT DEFAULT ''
       )`,
-    ], 'write');
+    ];
+    for (const sql of schema) await db.execute(sql);
 
     const r = await db.execute('SELECT COUNT(*) as c FROM habits');
     if (Number(r.rows[0].c) === 0) {
-      await db.batch([
+      const seeds = [
         { sql: 'INSERT INTO habits (name, description, emoji, color) VALUES (?, ?, ?, ?)', args: ['Morning Exercise', 'At least 20 minutes of movement', '🏃', '#f97316'] },
         { sql: 'INSERT INTO habits (name, description, emoji, color) VALUES (?, ?, ?, ?)', args: ['Read', 'Read for at least 30 minutes', '📚', '#fb923c'] },
         { sql: 'INSERT INTO habits (name, description, emoji, color) VALUES (?, ?, ?, ?)', args: ['Meditate', '10 minutes of mindfulness', '🧘', '#fdba74'] },
         { sql: 'INSERT INTO habits (name, description, emoji, color) VALUES (?, ?, ?, ?)', args: ['Drink Water', '8 glasses throughout the day', '💧', '#fed7aa'] },
         { sql: 'INSERT INTO goals (name, description, emoji, color, unit, target_value) VALUES (?, ?, ?, ?, ?, ?)', args: ['Run 50 miles', 'Monthly running goal', '🏅', '#f97316', 'miles', 50] },
         { sql: 'INSERT INTO goals (name, description, emoji, color, unit, target_value) VALUES (?, ?, ?, ?, ?, ?)', args: ['Read 5 books', 'Read more this month', '📖', '#fb923c', 'books', 5] },
-      ], 'write');
+      ];
+      for (const s of seeds) await db.execute(s);
     }
   })();
   return initPromise;

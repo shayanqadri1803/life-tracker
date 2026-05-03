@@ -17,7 +17,13 @@
       "Bash(mv frontend/index.html ./index.html)",
       "Bash(mv frontend/vite.config.js ./vite.config.js)",
       "Bash(mv frontend/eslint.config.js ./eslint.config.js)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(node --env-file=.env.local -e ' *)",
+      "Bash(npm ls *)",
+      "Bash(pkill -f vite)",
+      "Bash(npx vercel *)",
+      "Read(//tmp/**)",
+      "Bash(pkill -f \"vercel dev\")"
     ]
   }
 }
